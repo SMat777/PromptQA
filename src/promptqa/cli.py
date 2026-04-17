@@ -4,6 +4,8 @@ import argparse
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from promptqa import __version__
 from promptqa.config import load_config
 from promptqa.evaluator import Evaluator
@@ -61,7 +63,15 @@ def _create_provider(provider_name: str, mock_responses: dict[str, str]) -> Base
         return MockProvider(responses=mock_responses)
 
     if provider_name == "anthropic":
-        from promptqa.providers.anthropic import AnthropicProvider
+        try:
+            from promptqa.providers.anthropic import AnthropicProvider
+        except ImportError:
+            print(
+                "Error: Anthropic SDK not installed. "
+                "Install it with: pip install promptqa[anthropic]",
+                file=sys.stderr,
+            )
+            sys.exit(1)
 
         try:
             return AnthropicProvider()
@@ -75,6 +85,8 @@ def _create_provider(provider_name: str, mock_responses: dict[str, str]) -> Base
 
 def main() -> None:
     """Main entry point for the CLI."""
+    load_dotenv()
+
     parser = create_parser()
     args = parser.parse_args()
 
