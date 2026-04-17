@@ -41,13 +41,13 @@ Bygget for at bringe QA-metodik ind i AI — fordi LLM-output fortjener samme gr
                                         v
                   +-------------------------------------------+
                   | CLI (cli.py)                              |
-                  | Parser argumenter, vaelger provider       |
+                  | Parser argumenter, vælger provider        |
                   +---------------------+---------------------+
                                         |
                                         v
                   +-------------------------------------------+
                   | Config Loader (config.py)                 |
-                  | Laeser YAML, validerer testdefinitioner   |
+                  | Læser YAML, validerer testdefinitioner    |
                   +---------------------+---------------------+
                                         |
                                         v
@@ -67,11 +67,11 @@ Bygget for at bringe QA-metodik ind i AI — fordi LLM-output fortjener samme gr
        +-------------------+  +-----------------------+  +-------------------+
        | MockProvider      |  | AnthropicProvider     |  | (OllamaProvider)  |
        |                   |  |                       |  |                   |
-       | Returnerer for-   |  | Kalder Claude API     |  | Koerer lokal LLM  |
-       | definerede svar   |  | med din API-noegle    |  | via Ollama        |
+       | Returnerer for-   |  | Kalder Claude API     |  | Kører lokal LLM   |
+       | definerede svar   |  | med din API-nøgle     |  | via Ollama        |
        | fra YAML          |  |                       |  |                   |
        +-------------------+  +-----------------------+  +-------------------+
-          (gratis)              (kraever API-noegle)        (gratis, lokal)
+          (gratis)              (kræver API-nøgle)         (gratis, lokal)
                  +----------------------+--------------------------+
                                         |
                                         v
