@@ -65,11 +65,20 @@ examples:
         default=None,
         help="Write results to file instead of stdout",
     )
+    run_parser.add_argument(
+        "--model",
+        default=None,
+        help="Model to use (overrides ANTHROPIC_MODEL env var)",
+    )
 
     return parser
 
 
-def _create_provider(provider_name: str, mock_responses: dict[str, str]) -> BaseProvider:
+def _create_provider(
+    provider_name: str,
+    mock_responses: dict[str, str],
+    model: str | None = None,
+) -> BaseProvider:
     """Factory: map provider name string to concrete BaseProvider instance."""
     if provider_name == "mock":
         return MockProvider(responses=mock_responses)
@@ -86,7 +95,7 @@ def _create_provider(provider_name: str, mock_responses: dict[str, str]) -> Base
             sys.exit(1)
 
         try:
-            return AnthropicProvider()
+            return AnthropicProvider(model=model)
         except ValueError as e:
             print(f"Error: {e}", file=sys.stderr)
             sys.exit(1)
@@ -124,7 +133,7 @@ def _run(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     provider_name = args.provider or suite.provider
-    provider = _create_provider(provider_name, suite.mock_responses)
+    provider = _create_provider(provider_name, suite.mock_responses, model=args.model)
 
     evaluator = Evaluator(provider)
     results = evaluator.run(suite.tests)
@@ -139,7 +148,7 @@ def _run(args: argparse.Namespace) -> None:
     else:
         use_color = not args.no_color
         reporter = Reporter(use_color=use_color, verbose=args.verbose)
-        output = reporter.format(results)
+        output = reporter.format(results, suite_name=suite.name)
 
     if args.output:
         Path(args.output).write_text(output)

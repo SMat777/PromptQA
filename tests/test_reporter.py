@@ -92,6 +92,31 @@ class TestReporterOutput:
 
         assert "passed" in output.lower()
 
+    def test_suite_name_in_header(self) -> None:
+        reporter = Reporter(use_color=False)
+        output = reporter.format([_passing_result()], suite_name="My Suite")
+
+        assert "My Suite" in output
+
+    def test_token_usage_shown_when_present(self) -> None:
+        result = TestResult(
+            test_name="API test",
+            passed=True,
+            response_text="ok",
+            input_tokens=50,
+            output_tokens=30,
+        )
+        reporter = Reporter(use_color=False)
+        output = reporter.format([result])
+
+        assert "tokens: 50 in / 30 out" in output
+
+    def test_token_usage_hidden_when_zero(self) -> None:
+        reporter = Reporter(use_color=False)
+        output = reporter.format([_passing_result()])
+
+        assert "tokens" not in output
+
 
 class TestReporterColor:
     """Verify color behavior and NO_COLOR support."""
