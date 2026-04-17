@@ -10,6 +10,13 @@ from typing import Any
 
 import yaml
 
+VALID_CRITERION_TYPES = frozenset({
+    "contains",
+    "not_contains",
+    "contains_any",
+    "max_length",
+})
+
 
 @dataclass
 class Criterion:
@@ -97,20 +104,33 @@ def load_config(path: Path) -> TestSuite:
 
 def _parse_test_case(raw: dict[str, Any]) -> TestCase:
     """Parse a single test case from raw YAML data."""
-    criteria = [
-        Criterion(
-            type=c["type"],
-            value=c["value"],
-            description=c.get("description", ""),
-        )
-        for c in raw.get("criteria", [])
-    ]
+    _validate_required(raw, "name")
+    _validate_required(raw, "prompt")
+
+    criteria = [_parse_criterion(c) for c in raw.get("criteria", [])]
 
     return TestCase(
         name=raw["name"],
         prompt=raw["prompt"],
         criteria=criteria,
         system=raw.get("system", ""),
+    )
+
+
+def _parse_criterion(raw: dict[str, Any]) -> Criterion:
+    """Parse and validate a single criterion from raw YAML data."""
+    _validate_required(raw, "type")
+    _validate_required(raw, "value")
+
+    ctype = raw["type"]
+    if ctype not in VALID_CRITERION_TYPES:
+        valid = ", ".join(sorted(VALID_CRITERION_TYPES))
+        raise ValueError(f"Unknown criterion type '{ctype}'. Valid types: {valid}")
+
+    return Criterion(
+        type=ctype,
+        value=raw["value"],
+        description=raw.get("description", ""),
     )
 
 
