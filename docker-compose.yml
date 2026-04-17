@@ -1,0 +1,12 @@
+services:
+  promptqa:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - promptqa-data:/root/.promptqa
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+
+volumes:
+  promptqa-data:

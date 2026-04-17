@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — PromptQA{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+    <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Runs</p>
+        <p class="text-3xl font-bold">{{ total_runs }}</p>
+    </div>
+    <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Tests Passed</p>
+        <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{{ total_passed }}</p>
+    </div>
+    <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Tests Failed</p>
+        <p class="text-3xl font-bold text-red-600 dark:text-red-400">{{ total_failed }}</p>
+    </div>
+</div>
+
+<!-- Run History -->
+<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
+    <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+        <h2 class="font-semibold text-lg">Recent Runs</h2>
+    </div>
+
+    {% if runs %}
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800">
+                    <th class="px-5 py-3 font-medium">Suite</th>
+                    <th class="px-5 py-3 font-medium">Provider</th>
+                    <th class="px-5 py-3 font-medium">Result</th>
+                    <th class="px-5 py-3 font-medium">Duration</th>
+                    <th class="px-5 py-3 font-medium">Date</th>
+                    <th class="px-5 py-3 font-medium"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                {% for run in runs %}
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                    <td class="px-5 py-3 font-medium">{{ run.suite_name }}</td>
+                    <td class="px-5 py-3">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                            {{ run.provider }}
+                        </span>
+                    </td>
+                    <td class="px-5 py-3">
+                        {% if run.failed == 0 %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
+                            {{ run.passed }}/{{ run.total }} passed
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400">
+                            {{ run.failed }}/{{ run.total }} failed
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-5 py-3 text-gray-500 dark:text-gray-400">{{ "%.1f"|format(run.duration_ms) }}ms</td>
+                    <td class="px-5 py-3 text-gray-500 dark:text-gray-400">{{ run.created_at[:16] }}</td>
+                    <td class="px-5 py-3">
+                        <a href="/runs/{{ run.id }}" class="text-brand-600 dark:text-brand-500 hover:underline text-sm">Details</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="px-5 py-12 text-center text-gray-400 dark:text-gray-500">
+        <p class="text-lg mb-2">No runs yet</p>
+        <p class="text-sm">Run a test suite via CLI or POST to <code class="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">/api/runs</code></p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

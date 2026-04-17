@@ -30,8 +30,19 @@ dependencies = [
 anthropic = [
     "anthropic>=0.42.0",
 ]
+web = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
+    "jinja2>=3.1.0",
+    "python-multipart>=0.0.9",
+]
 dev = [
     "anthropic>=0.42.0",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
+    "jinja2>=3.1.0",
+    "python-multipart>=0.0.9",
+    "httpx>=0.27.0",
     "pytest>=8.0.0",
     "ruff>=0.8.0",
     "mypy>=1.13.0",
@@ -43,6 +54,9 @@ promptqa = "promptqa.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+promptqa = ["dashboard/templates/*.html"]
 
 [tool.ruff]
 target-version = "py311"
