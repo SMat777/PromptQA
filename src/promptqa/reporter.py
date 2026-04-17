@@ -4,6 +4,7 @@ Supports colored output (ANSI escape codes) with graceful fallback
 via the NO_COLOR environment variable (https://no-color.org/).
 """
 
+import json
 import os
 
 from promptqa.evaluator import TestResult
@@ -85,3 +86,46 @@ class Reporter:
     @staticmethod
     def _red(text: str) -> str:
         return f"\033[31m{text}\033[0m"
+
+
+class JsonReporter:
+    """Formats test results as JSON for CI/CD integration."""
+
+    def format(
+        self,
+        results: list[TestResult],
+        suite_name: str = "",
+        provider: str = "",
+    ) -> str:
+        """Format results as a JSON string."""
+        passed = sum(1 for r in results if r.passed)
+        total_ms = sum(r.duration_ms for r in results)
+
+        data = {
+            "suite": suite_name,
+            "provider": provider,
+            "total": len(results),
+            "passed": passed,
+            "failed": len(results) - passed,
+            "duration_ms": round(total_ms, 2),
+            "results": [self._format_result(r) for r in results],
+        }
+        return json.dumps(data, indent=2)
+
+    @staticmethod
+    def _format_result(result: TestResult) -> dict[str, object]:
+        return {
+            "name": result.test_name,
+            "passed": result.passed,
+            "duration_ms": round(result.duration_ms, 2),
+            "response": result.response_text,
+            "criteria": [
+                {
+                    "type": cr.criterion_type,
+                    "passed": cr.passed,
+                    "description": cr.description,
+                    "detail": cr.detail,
+                }
+                for cr in result.criterion_results
+            ],
+        }

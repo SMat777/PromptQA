@@ -11,7 +11,7 @@ from promptqa.config import load_config
 from promptqa.evaluator import Evaluator
 from promptqa.providers.base import BaseProvider
 from promptqa.providers.mock import MockProvider
-from promptqa.reporter import Reporter
+from promptqa.reporter import JsonReporter, Reporter
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -52,6 +52,18 @@ examples:
         "--no-color",
         action="store_true",
         help="Disable colored output",
+    )
+    run_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        dest="output_format",
+        help="Output format (default: text)",
+    )
+    run_parser.add_argument(
+        "--output", "-o",
+        default=None,
+        help="Write results to file instead of stdout",
     )
 
     return parser
@@ -117,9 +129,22 @@ def _run(args: argparse.Namespace) -> None:
     evaluator = Evaluator(provider)
     results = evaluator.run(suite.tests)
 
-    use_color = not args.no_color
-    reporter = Reporter(use_color=use_color, verbose=args.verbose)
-    print(reporter.format(results))
+    if args.output_format == "json":
+        json_reporter = JsonReporter()
+        output = json_reporter.format(
+            results,
+            suite_name=suite.name,
+            provider=provider_name,
+        )
+    else:
+        use_color = not args.no_color
+        reporter = Reporter(use_color=use_color, verbose=args.verbose)
+        output = reporter.format(results)
+
+    if args.output:
+        Path(args.output).write_text(output)
+    else:
+        print(output)
 
     if any(not r.passed for r in results):
         sys.exit(1)

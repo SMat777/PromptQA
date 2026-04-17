@@ -1,9 +1,10 @@
 """Tests for the Reporter — structured terminal output formatting."""
 
+import json
 import os
 
 from promptqa.evaluator import CriterionResult, TestResult
-from promptqa.reporter import Reporter
+from promptqa.reporter import JsonReporter, Reporter
 
 
 def _passing_result(name: str = "Test A") -> TestResult:
@@ -108,3 +109,49 @@ class TestReporterColor:
         output = reporter.format([_passing_result()])
 
         assert "\033[" not in output
+
+
+class TestJsonReporter:
+    """Verify JSON output format."""
+
+    def test_valid_json_output(self) -> None:
+        reporter = JsonReporter()
+        output = reporter.format([_passing_result()], suite_name="Suite", provider="mock")
+
+        data = json.loads(output)
+        assert data["suite"] == "Suite"
+        assert data["provider"] == "mock"
+
+    def test_counts(self) -> None:
+        reporter = JsonReporter()
+        results = [_passing_result(), _failing_result()]
+        data = json.loads(reporter.format(results))
+
+        assert data["total"] == 2
+        assert data["passed"] == 1
+        assert data["failed"] == 1
+
+    def test_result_structure(self) -> None:
+        reporter = JsonReporter()
+        data = json.loads(reporter.format([_passing_result()]))
+
+        result = data["results"][0]
+        assert result["name"] == "Test A"
+        assert result["passed"] is True
+        assert "criteria" in result
+        assert result["criteria"][0]["type"] == "contains"
+
+    def test_failed_criteria_detail(self) -> None:
+        reporter = JsonReporter()
+        data = json.loads(reporter.format([_failing_result()]))
+
+        criterion = data["results"][0]["criteria"][0]
+        assert criterion["passed"] is False
+        assert "Expected" in criterion["detail"]
+
+    def test_duration_included(self) -> None:
+        reporter = JsonReporter()
+        data = json.loads(reporter.format([_passing_result()]))
+
+        assert data["duration_ms"] >= 0
+        assert data["results"][0]["duration_ms"] >= 0
