@@ -107,6 +107,112 @@ class TestCriteriaCheckers:
         assert results[0].passed is False
         assert "Unknown criterion type" in results[0].criterion_results[0].detail
 
+    def test_min_length_pass(self) -> None:
+        provider = _make_provider({"q": "A long enough response here"})
+        evaluator = Evaluator(provider)
+        tc = _make_test_case("q", [Criterion(type="min_length", value=10)])
+
+        results = evaluator.run([tc])
+
+        assert results[0].passed is True
+
+    def test_min_length_fail(self) -> None:
+        provider = _make_provider({"q": "Short"})
+        evaluator = Evaluator(provider)
+        tc = _make_test_case("q", [Criterion(type="min_length", value=100)])
+
+        results = evaluator.run([tc])
+
+        assert results[0].passed is False
+
+    def test_equals_pass(self) -> None:
+        provider = _make_provider({"q": "  Copenhagen  "})
+        evaluator = Evaluator(provider)
+        tc = _make_test_case("q", [Criterion(type="equals", value="Copenhagen")])
+
+        results = evaluator.run([tc])
+
+        assert results[0].passed is True
+
+    def test_equals_fail(self) -> None:
+        provider = _make_provider({"q": "Copenhagen is great"})
+        evaluator = Evaluator(provider)
+        tc = _make_test_case("q", [Criterion(type="equals", value="Copenhagen")])
+
+        results = evaluator.run([tc])
+
+        assert results[0].passed is False
+
+    def test_regex_pass(self) -> None:
+        provider = _make_provider({"q": "The answer is 42."})
+        evaluator = Evaluator(provider)
+        tc = _make_test_case("q", [Criterion(type="regex", value=r"\d+")])
+
+        results = evaluator.run([tc])
+
+        assert results[0].passed is True
+
+    def test_regex_fail(self) -> None:
+        provider = _make_provider({"q": "No numbers here"})
+        evaluator = Evaluator(provider)
+        tc = _make_test_case("q", [Criterion(type="regex", value=r"\d+")])
+
+        results = evaluator.run([tc])
+
+        assert results[0].passed is False
+
+    def test_regex_invalid_pattern(self) -> None:
+        provider = _make_provider({"q": "anything"})
+        evaluator = Evaluator(provider)
+        tc = _make_test_case("q", [Criterion(type="regex", value="[invalid")])
+
+        results = evaluator.run([tc])
+
+        assert results[0].passed is False
+        assert "Invalid regex" in results[0].criterion_results[0].detail
+
+    def test_json_valid_pass(self) -> None:
+        provider = _make_provider({"q": '{"key": "value", "num": 42}'})
+        evaluator = Evaluator(provider)
+        tc = _make_test_case("q", [Criterion(type="json_valid", value=True)])
+
+        results = evaluator.run([tc])
+
+        assert results[0].passed is True
+
+    def test_json_valid_fail(self) -> None:
+        provider = _make_provider({"q": "not json at all"})
+        evaluator = Evaluator(provider)
+        tc = _make_test_case("q", [Criterion(type="json_valid", value=True)])
+
+        results = evaluator.run([tc])
+
+        assert results[0].passed is False
+
+    def test_contains_case_insensitive(self) -> None:
+        provider = _make_provider({"q": "COPENHAGEN is the capital"})
+        evaluator = Evaluator(provider)
+        tc = _make_test_case(
+            "q",
+            [Criterion(type="contains", value="copenhagen", case_insensitive=True)],
+        )
+
+        results = evaluator.run([tc])
+
+        assert results[0].passed is True
+
+    def test_equals_case_insensitive(self) -> None:
+        provider = _make_provider({"q": "  HELLO WORLD  "})
+        evaluator = Evaluator(provider)
+        tc = _make_test_case(
+            "q",
+            [Criterion(type="equals", value="hello world", case_insensitive=True)],
+        )
+
+        results = evaluator.run([tc])
+
+        assert results[0].passed is True
+
 
 class TestEvaluatorResults:
     """Verify result structure and multi-criteria evaluation."""
