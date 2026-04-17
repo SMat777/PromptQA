@@ -1,7 +1,7 @@
 ---
 name: Feature
 about: New functionality for PromptQA
-title: "feat: "
+title: ""
 labels: feature
 ---
 
@@ -16,6 +16,3 @@ labels: feature
 
 ## Technical Notes
 <!-- Implementation hints, relevant files, dependencies -->
-
-## Learning Goals
-<!-- What will I learn by implementing this? -->
