@@ -29,11 +29,11 @@ class Reporter:
             self.use_color = use_color
         self.verbose = verbose
 
-    def format(self, results: list[TestResult]) -> str:
+    def format(self, results: list[TestResult], suite_name: str = "") -> str:
         """Format all results into a single output string."""
         lines: list[str] = []
 
-        lines.append(self._header(len(results)))
+        lines.append(self._header(len(results), suite_name))
         lines.append("")
 
         for result in results:
@@ -48,8 +48,9 @@ class Reporter:
 
         return "\n".join(lines)
 
-    def _header(self, count: int) -> str:
-        title = f"PromptQA — {count} test{'s' if count != 1 else ''}"
+    def _header(self, count: int, suite_name: str = "") -> str:
+        label = suite_name if suite_name else "PromptQA"
+        title = f"{label} — {count} test{'s' if count != 1 else ''}"
         separator = "━" * 50
         return f"{separator}\n{title}\n{separator}"
 
@@ -66,6 +67,8 @@ class Reporter:
         passed = sum(1 for r in results if r.passed)
         failed = len(results) - passed
         total_ms = sum(r.duration_ms for r in results)
+        total_in = sum(r.input_tokens for r in results)
+        total_out = sum(r.output_tokens for r in results)
 
         parts: list[str] = []
         if passed > 0:
@@ -77,6 +80,8 @@ class Reporter:
 
         separator = "━" * 50
         summary = f"{', '.join(parts)} ({total_ms:.0f}ms)"
+        if total_in > 0 or total_out > 0:
+            summary += f" | tokens: {total_in} in / {total_out} out"
         return f"{separator}\n{summary}"
 
     @staticmethod
