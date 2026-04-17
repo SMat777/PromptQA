@@ -8,9 +8,12 @@ provider without code changes.
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import TypeAlias
 
 from promptqa.config import Criterion, TestCase
 from promptqa.providers.base import BaseProvider
+
+CheckerFn: TypeAlias = Callable[[str, Criterion], "CriterionResult"]
 
 
 @dataclass
@@ -88,8 +91,7 @@ class Evaluator:
 
 def _check_criterion(text: str, criterion: Criterion) -> CriterionResult:
     """Route to the correct checker based on criterion type."""
-    _checker_fn = Callable[[str, Criterion], CriterionResult]
-    checkers: dict[str, _checker_fn] = {
+    checkers: dict[str, CheckerFn] = {
         "contains": _check_contains,
         "not_contains": _check_not_contains,
         "contains_any": _check_contains_any,
