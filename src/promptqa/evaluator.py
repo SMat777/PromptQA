@@ -5,6 +5,8 @@ so it works identically with MockProvider, AnthropicProvider, or any future
 provider without code changes.
 """
 
+import json
+import re
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -96,6 +98,10 @@ def _check_criterion(text: str, criterion: Criterion) -> CriterionResult:
         "not_contains": _check_not_contains,
         "contains_any": _check_contains_any,
         "max_length": _check_max_length,
+        "min_length": _check_min_length,
+        "equals": _check_equals,
+        "regex": _check_regex,
+        "json_valid": _check_json_valid,
     }
 
     checker = checkers.get(criterion.type)
@@ -110,8 +116,13 @@ def _check_criterion(text: str, criterion: Criterion) -> CriterionResult:
     return checker(text, criterion)
 
 
+def _ci(text: str, c: Criterion) -> str:
+    """Apply case-insensitive lowering if the criterion requests it."""
+    return text.lower() if c.case_insensitive else text
+
+
 def _check_contains(text: str, c: Criterion) -> CriterionResult:
-    passed = str(c.value) in text
+    passed = str(c.value).lower() in text.lower() if c.case_insensitive else str(c.value) in text
     return CriterionResult(
         passed=passed,
         criterion_type="contains",
@@ -121,7 +132,8 @@ def _check_contains(text: str, c: Criterion) -> CriterionResult:
 
 
 def _check_not_contains(text: str, c: Criterion) -> CriterionResult:
-    passed = str(c.value) not in text
+    t, v = (_ci(text, c), str(c.value).lower()) if c.case_insensitive else (text, str(c.value))
+    passed = v not in t
     return CriterionResult(
         passed=passed,
         criterion_type="not_contains",
@@ -132,7 +144,8 @@ def _check_not_contains(text: str, c: Criterion) -> CriterionResult:
 
 def _check_contains_any(text: str, c: Criterion) -> CriterionResult:
     values = c.value if isinstance(c.value, list) else [c.value]
-    found = [v for v in values if v in text]
+    t = text.lower() if c.case_insensitive else text
+    found = [v for v in values if (v.lower() if c.case_insensitive else v) in t]
     passed = len(found) > 0
     return CriterionResult(
         passed=passed,
@@ -150,4 +163,66 @@ def _check_max_length(text: str, c: Criterion) -> CriterionResult:
         criterion_type="max_length",
         description=c.description,
         detail="" if passed else f"Response length {len(text)} exceeds max {max_len}",
+    )
+
+
+def _check_min_length(text: str, c: Criterion) -> CriterionResult:
+    min_len = int(c.value)
+    passed = len(text) >= min_len
+    return CriterionResult(
+        passed=passed,
+        criterion_type="min_length",
+        description=c.description,
+        detail="" if passed else f"Response length {len(text)} below min {min_len}",
+    )
+
+
+def _check_equals(text: str, c: Criterion) -> CriterionResult:
+    expected = str(c.value)
+    actual = text.strip()
+    if c.case_insensitive:
+        passed = actual.lower() == expected.lower()
+    else:
+        passed = actual == expected
+    return CriterionResult(
+        passed=passed,
+        criterion_type="equals",
+        description=c.description,
+        detail="" if passed else f"Expected exact match '{expected}', got '{actual}'",
+    )
+
+
+def _check_regex(text: str, c: Criterion) -> CriterionResult:
+    pattern = str(c.value)
+    flags = re.IGNORECASE if c.case_insensitive else 0
+    try:
+        passed = re.search(pattern, text, flags) is not None
+    except re.error as e:
+        return CriterionResult(
+            passed=False,
+            criterion_type="regex",
+            description=c.description,
+            detail=f"Invalid regex pattern: {e}",
+        )
+    return CriterionResult(
+        passed=passed,
+        criterion_type="regex",
+        description=c.description,
+        detail="" if passed else f"Pattern '{pattern}' not found in response",
+    )
+
+
+def _check_json_valid(text: str, c: Criterion) -> CriterionResult:
+    try:
+        json.loads(text)
+        passed = True
+        detail = ""
+    except json.JSONDecodeError as e:
+        passed = False
+        detail = f"Invalid JSON: {e}"
+    return CriterionResult(
+        passed=passed,
+        criterion_type="json_valid",
+        description=c.description,
+        detail=detail,
     )

@@ -42,15 +42,40 @@ tests:
     prompt: "What is 144 divided by 12?"
     system: "Answer with just the number."
     criteria:
-      - type: contains
+      - type: equals
         value: "12"
-        description: "Must contain the correct answer"
+        description: "Must be exactly 12"
       - type: max_length
         value: 50
         description: "Should be very concise"
+
+  - name: "Structured output — JSON response"
+    prompt: "List the three largest oceans as JSON."
+    system: "Respond with only valid JSON. Use format: {\"oceans\": [...]}"
+    criteria:
+      - type: json_valid
+        value: true
+        description: "Must be valid JSON"
+      - type: regex
+        value: "Pacific|Atlantic|Indian"
+        description: "Must mention at least one major ocean"
+      - type: min_length
+        value: 20
+        description: "Response should be substantive"
+
+  - name: "Case-insensitive geography"
+    prompt: "Name a Scandinavian country."
+    system: "Answer in one word."
+    criteria:
+      - type: contains
+        value: "denmark"
+        case_insensitive: true
+        description: "Must mention Denmark (any casing)"
 
 mock_responses:
   "What is the capital of Denmark?": "The capital of Denmark is Copenhagen."
   "What is the chemical formula for water?": "The chemical formula for water is H2O (dihydrogen monoxide)."
   "In what year did humans first land on the moon?": "Humans first landed on the moon in 1969, during the Apollo 11 mission."
   "What is 144 divided by 12?": "12"
+  "List the three largest oceans as JSON.": "{\"oceans\": [\"Pacific\", \"Atlantic\", \"Indian\"]}"
+  "Name a Scandinavian country.": "Denmark"
