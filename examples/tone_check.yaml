@@ -30,15 +30,15 @@ tests:
         value: 200
         description: "Response must be under 200 characters"
 
-  - name: "Danish language check"
-    prompt: "Hvad er hovedstaden i Danmark?"
-    system: "Svar på dansk."
+  - name: "Instructed language — follow system prompt"
+    prompt: "What is the capital of France?"
+    system: "Always respond in exactly one word."
     criteria:
-      - type: contains
-        value: "København"
-        description: "Danish response should use Danish name for Copenhagen"
+      - type: equals
+        value: "Paris"
+        description: "Should respond with exactly 'Paris'"
 
 mock_responses:
   "Write a one-sentence reply to a customer complaint about late delivery.": "We sincerely apologize for the delay in your delivery and are working to resolve this immediately."
   "Summarize what Python is in one sentence.": "Python is a high-level, general-purpose programming language known for its readability and versatility."
-  "Hvad er hovedstaden i Danmark?": "Hovedstaden i Danmark er København."
+  "What is the capital of France?": "Paris"
