@@ -3,7 +3,6 @@
 **Systematisk test og kvalitetssikring af LLM-output.**
 
 Definér testcases i YAML, kør dem mod en LLM og få strukturerede pass/fail-resultater.
-Bygget for at bringe QA-metodik ind i AI — fordi LLM-output fortjener samme grundighed som al anden software.
 
 ---
 
@@ -19,17 +18,66 @@ Bygget for at bringe QA-metodik ind i AI — fordi LLM-output fortjener samme gr
 
 ---
 
-## Teknologier
+## Sådan virker det
 
-| Værktøj | Rolle |
-|---|---|
-| Python 3.11+ | Sprog |
-| Anthropic SDK | Claude API-integration |
-| PyYAML | Testcase-konfiguration |
-| pytest | Testframework |
-| ruff | Linting |
-| mypy | Statisk typetjek |
-| GitHub Actions | CI/CD-pipeline |
+### 1. Definér en testcase i YAML
+
+```yaml
+# mine_tests.yaml
+name: "Mine tests"
+provider: mock                          # eller: anthropic
+
+tests:
+  - name: "Tjek at svaret er på dansk"
+    prompt: "Hvad er hovedstaden i Danmark?"
+    system: "Svar på dansk i én sætning."
+    criteria:
+      - type: contains
+        value: "København"
+      - type: max_length
+        value: 100
+
+# Mock-svar (bruges når provider er 'mock' — gratis, ingen API)
+mock_responses:
+  "Hvad er hovedstaden i Danmark?": "Hovedstaden i Danmark er København."
+```
+
+**Kriterietyper:** `contains`, `not_contains`, `contains_any`, `max_length`
+
+### 2. Kør testen
+
+```bash
+# Med mock-provider (gratis, foruddefinerede svar fra YAML)
+promptqa run mine_tests.yaml
+
+# Med Claude API (rigtige LLM-svar)
+promptqa run mine_tests.yaml --provider anthropic
+
+# Med detaljer per kriterie
+promptqa run mine_tests.yaml --verbose
+```
+
+### 3. Læs resultatet
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PromptQA — 1 test
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  PASS  Tjek at svaret er på dansk (0.0ms)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1 passed (0ms)
+```
+
+### Vil du bruge en rigtig LLM?
+
+```bash
+cp .env.example .env       # Tilføj din ANTHROPIC_API_KEY
+promptqa run mine_tests.yaml --provider anthropic
+```
+
+Gratis alternativ: [Ollama](https://ollama.com/) kører en lokal LLM uden API-nøgle.
 
 ---
 
@@ -86,6 +134,20 @@ Bygget for at bringe QA-metodik ind i AI — fordi LLM-output fortjener samme gr
 
 ---
 
+## Teknologier
+
+| Værktøj | Rolle |
+|---|---|
+| Python 3.11+ | Sprog |
+| Anthropic SDK | Claude API-integration |
+| PyYAML | Testcase-konfiguration |
+| pytest | Testframework |
+| ruff | Linting |
+| mypy | Statisk typetjek |
+| GitHub Actions | CI/CD-pipeline |
+
+---
+
 ## Kom i gang
 
 ```bash
@@ -93,20 +155,10 @@ git clone https://github.com/SMat777/PromptQA.git
 cd PromptQA
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt && pip install -e ".[dev]"
-```
 
-Kør dit første test (gratis, ingen API-nøgle):
-```bash
+# Kør med mock-provider (gratis)
 promptqa run examples/basic_test.yaml
 ```
-
-Kør med Claude API:
-```bash
-cp .env.example .env          # Tilføj din ANTHROPIC_API_KEY
-promptqa run examples/basic_test.yaml --provider anthropic
-```
-
-Gratis alternativ til rigtige LLM-svar: [Ollama](https://ollama.com/) kører lokalt uden API-nøgle.
 
 ---
 
@@ -118,10 +170,6 @@ Gratis alternativ til rigtige LLM-svar: [Ollama](https://ollama.com/) kører lok
 | **Tone** | `examples/tone_check.yaml` | Professionel vs. uformel kommunikation |
 | **Sikkerhed** | `examples/safety.yaml` | Afvisning af skadelige forespørgsler |
 | **Faktuel** | `examples/factual.yaml` | Korrekte svar på kendte spørgsmål |
-
-```bash
-promptqa run examples/tone_check.yaml --verbose
-```
 
 ---
 
@@ -135,10 +183,10 @@ src/promptqa/
 ├── config.py                # YAML → typed TestSuite/TestCase/Criterion dataclasses
 ├── providers/
 │   ├── base.py              # BaseProvider ABC — Strategy-interfacet
-│   ├── mock.py              # MockProvider — dict-baseret opslagning af foruddefinerede svar
-│   └── anthropic.py         # AnthropicProvider — Claude API med TextBlock-håndtering
-├── evaluator.py             # Kører testcases: provider.complete() → kriterietjek → TestResult
-└── reporter.py              # Terminal-output med ANSI-farver og NO_COLOR-support
+│   ├── mock.py              # MockProvider — dict-baseret svar fra YAML
+│   └── anthropic.py         # AnthropicProvider — Claude API
+├── evaluator.py             # Kører testcases: provider → kriterietjek → TestResult
+└── reporter.py              # Terminal-output med ANSI-farver
 
 tests/                       # 65 tests — pytest
 examples/                    # 4 YAML-suites med mock-svar
@@ -165,13 +213,3 @@ pytest -v               # Kør alle tests
 ruff check src/ tests/  # Lint
 mypy src/               # Typetjek
 ```
-
----
-
-## Baggrund
-
-Projektet kombinerer 8 års systematisk softwaretest hos Brunata A/S med daglig brug af Claude Code og MCP-server arkitektur. Kerneidéen: LLM-output bør testes med samme grundighed som al anden software — definerede kriterier, reproducerbare resultater, klart pass/fail.
-
----
-
-MIT-licens — se [LICENSE](LICENSE)
