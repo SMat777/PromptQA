@@ -23,7 +23,7 @@ class AnthropicProvider(BaseProvider):
         api_key: Override for ANTHROPIC_API_KEY env var (primarily for testing).
     """
 
-    def __init__(self, api_key: str | None = None) -> None:
+    def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
         key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         if not key:
             raise ValueError(
@@ -33,7 +33,7 @@ class AnthropicProvider(BaseProvider):
             )
 
         self._client = anthropic.Anthropic(api_key=key)
-        self._model = os.environ.get("ANTHROPIC_MODEL", DEFAULT_MODEL)
+        self._model = model or os.environ.get("ANTHROPIC_MODEL", DEFAULT_MODEL)
 
     def complete(self, prompt: str, system: str = "") -> ProviderResponse:
         """Send prompt to Claude and return structured response."""

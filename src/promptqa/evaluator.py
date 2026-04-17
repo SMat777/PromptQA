@@ -52,6 +52,8 @@ class TestResult:
     response_text: str
     criterion_results: list[CriterionResult] = field(default_factory=list)
     duration_ms: float = 0.0
+    input_tokens: int = 0
+    output_tokens: int = 0
 
 
 class Evaluator:
@@ -84,6 +86,8 @@ class Evaluator:
             response_text=response.text,
             criterion_results=criterion_results,
             duration_ms=duration_ms,
+            input_tokens=response.input_tokens,
+            output_tokens=response.output_tokens,
         )
 
 
