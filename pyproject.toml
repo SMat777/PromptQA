@@ -22,13 +22,16 @@ classifiers = [
     "Topic :: Software Development :: Testing",
 ]
 dependencies = [
-    "anthropic>=0.42.0",
     "python-dotenv>=1.0.0",
     "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
+anthropic = [
+    "anthropic>=0.42.0",
+]
 dev = [
+    "anthropic>=0.42.0",
     "pytest>=8.0.0",
     "ruff>=0.8.0",
     "mypy>=1.13.0",
