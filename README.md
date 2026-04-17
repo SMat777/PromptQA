@@ -1,25 +1,39 @@
 # PromptQA
 
-**Systematic LLM output testing and quality assurance.**
+**Systematisk test og kvalitetssikring af LLM-output.**
 
-Define test cases in YAML. Run them against any LLM. Get structured pass/fail results.
-Built to bring QA methodology into the world of AI — because LLM outputs deserve the same rigor as any other software.
+Definér testcases i YAML, kør dem mod en LLM og få strukturerede pass/fail-resultater.
+Bygget for at bringe QA-metodik ind i AI — fordi LLM-output fortjener samme grundighed som al anden software.
 
 ---
 
-## What This Project Demonstrates
+## Overblik
 
-| Concept | Where in the code | Why it matters |
+| Koncept | Placering | Formål |
 |---|---|---|
-| **Strategy Pattern** | `src/promptqa/providers/base.py` | Swap LLM backends without changing evaluation logic |
-| **Test-Driven Development** | `tests/` | Every feature starts with a failing test |
-| **YAML-driven configuration** | `examples/basic_test.yaml` | Declarative test definitions, no code changes needed |
-| **Structured result objects** | `src/promptqa/providers/base.py` | Dataclasses over dicts — typed, documented, IDE-friendly |
-| **CI/CD pipeline** | `.github/workflows/ci.yml` | Automated quality gates: pytest, ruff, mypy |
+| **Strategy Pattern** | `providers/base.py` | Skift LLM-backend uden at røre evaluerings-logikken |
+| **Test-Driven Development** | `tests/` | Hver feature starter med en fejlende test |
+| **YAML-konfiguration** | `examples/` | Deklarative testdefinitioner — ingen kodeændringer nødvendige |
+| **Typed dataclasses** | `providers/base.py`, `config.py` | Strukturerede resultat-objekter i stedet for løse dicts |
+| **CI/CD** | `.github/workflows/ci.yml` | Automatisk kvalitetskontrol: pytest, ruff, mypy |
 
 ---
 
-## Architecture
+## Teknologier
+
+| Værktøj | Rolle |
+|---|---|
+| Python 3.11+ | Sprog |
+| Anthropic SDK | Claude API-integration |
+| PyYAML | Testcase-konfiguration |
+| pytest | Testframework |
+| ruff | Linting |
+| mypy | Statisk typetjek |
+| GitHub Actions | CI/CD-pipeline |
+
+---
+
+## Arkitektur
 
 ```
                          promptqa run tests.yaml --provider anthropic
@@ -27,22 +41,22 @@ Built to bring QA methodology into the world of AI — because LLM outputs deser
                                         v
                     +-------------------------------------------+
                     |               CLI (cli.py)                |
-                    |   Parses args, selects provider, starts   |
+                    |   Parser argumenter, vælger provider      |
                     +-------------------+-----------------------+
                                         |
                                         v
                     +-------------------------------------------+
                     |          Config Loader (config.py)         |
-                    |   Reads YAML, validates test definitions   |
+                    |   Læser YAML, validerer testdefinitioner   |
                     +-------------------+-----------------------+
                                         |
                                         v
                     +-------------------------------------------+
                     |          Evaluator (evaluator.py)          |
-                    |   Runs each test case:                     |
-                    |   1. Send prompt to provider               |
-                    |   2. Check response against criteria       |
-                    |   3. Collect results                       |
+                    |   For hver testcase:                       |
+                    |   1. Send prompt til provider              |
+                    |   2. Tjek svar mod kriterier               |
+                    |   3. Saml resultater                       |
                     +-------------------+-----------------------+
                                         |
                       provider.complete(prompt, system)
@@ -53,190 +67,112 @@ Built to bring QA methodology into the world of AI — because LLM outputs deser
     +------------------+   +---------------------+   +-------------------+
     |   MockProvider   |   | AnthropicProvider    |   |  (OllamaProvider) |
     |                  |   |                      |   |                   |
-    |  Returns pre-    |   |  Calls Claude API    |   |  Runs local LLM   |
-    |  defined YAML    |   |  with your API key   |   |  via Ollama       |
-    |  responses       |   |                      |   |  (coming soon)    |
+    |  Returnerer for- |   |  Kalder Claude API   |   |  Kører lokal LLM  |
+    |  definerede svar |   |  med din API-nøgle   |   |  via Ollama       |
+    |  fra YAML        |   |                      |   |                   |
     +------------------+   +---------------------+   +-------------------+
-         (free)              (requires API key)          (free, local)
+         (gratis)            (kræver API-nøgle)        (gratis, lokal)
               |                         |                         |
               +-------------------------+-------------------------+
                                         |
                                         v
                     +-------------------------------------------+
                     |          Reporter (reporter.py)            |
-                    |   Formats results: pass/fail, summary,    |
-                    |   token usage, timing                     |
+                    |   Formaterer: pass/fail, opsummering,     |
+                    |   tokenforbrug, timing                     |
                     +-------------------------------------------+
 ```
 
-> **Strategy Pattern:** The evaluator doesn't know which provider is active.
-> It calls `provider.complete()` — the concrete provider handles the rest.
-> Adding a new provider means implementing one class. Zero changes to evaluation logic.
-> See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a deeper explanation.
+**Strategy Pattern:** Evaluator kender ikke den aktive provider — den kalder `provider.complete()`, og den konkrete provider håndterer resten. En ny provider kræver én ny klasse. Nul ændringer i evaluerings-logikken. Se [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detaljer.
 
 ---
 
-## Getting Started
-
-### Prerequisites
-
-- Python 3.11+
-- (Optional) [Ollama](https://ollama.com/) for free local LLM testing — no API key needed
-
-### Installation
+## Kom i gang
 
 ```bash
-# Clone the repo
 git clone https://github.com/SMat777/PromptQA.git
 cd PromptQA
-
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate    # macOS/Linux
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Install package in development mode
-pip install -e ".[dev]"
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt && pip install -e ".[dev]"
 ```
 
-### Configuration
-
+Kør dit første test (gratis, ingen API-nøgle):
 ```bash
-# Copy the environment template
-cp .env.example .env
-
-# Add your Anthropic API key (only needed for --provider anthropic)
-# Get one at: https://console.anthropic.com/
-```
-
-### Usage
-
-```bash
-# Run tests with mock provider (free, no API key)
 promptqa run examples/basic_test.yaml
+```
 
-# Run with Claude API
+Kør med Claude API:
+```bash
+cp .env.example .env          # Tilføj din ANTHROPIC_API_KEY
 promptqa run examples/basic_test.yaml --provider anthropic
-
-# Verbose output
-promptqa run examples/basic_test.yaml --verbose
-
-# Run all example suites
-promptqa run examples/tone_check.yaml
-promptqa run examples/safety.yaml
-promptqa run examples/factual.yaml
-
-# Check version
-promptqa --version
 ```
 
-### Running without an API key
-
-PromptQA ships with a **mock provider** that uses pre-defined responses from your YAML file.
-This is how the test suite runs — deterministic, free, no external dependencies.
-
-For free LLM testing with real model responses, consider [Ollama](https://ollama.com/):
-```bash
-brew install ollama          # macOS
-ollama pull llama3.2         # Download a model
-ollama serve                 # Start local server
-```
-The architecture (Strategy Pattern) makes adding an Ollama provider straightforward —
-see [issue #12](../../issues) for status.
+Gratis alternativ til rigtige LLM-svar: [Ollama](https://ollama.com/) kører lokalt uden API-nøgle.
 
 ---
 
-## Project Structure
+## Eksempler
 
-```
-PromptQA/
-├── src/promptqa/
-│   ├── __init__.py          # Package version
-│   ├── __main__.py          # python -m promptqa entry point
-│   ├── cli.py               # Argument parsing and command routing
-│   ├── config.py            # YAML test case loader
-│   ├── providers/
-│   │   ├── base.py          # BaseProvider ABC — the Strategy interface
-│   │   ├── mock.py          # MockProvider — deterministic YAML responses
-│   │   └── anthropic.py     # AnthropicProvider — Claude API
-│   ├── evaluator.py         # Core test runner with criteria checkers
-│   └── reporter.py          # Terminal output with ANSI colors
-├── tests/                   # pytest test suite
-├── examples/
-│   ├── basic_test.yaml      # Core functionality demo (3 tests)
-│   ├── tone_check.yaml      # Professional/casual tone verification
-│   ├── safety.yaml          # Harmful request refusal checks
-│   └── factual.yaml         # Factual accuracy on known questions
-├── docs/
-│   ├── ARCHITECTURE.md      # Strategy Pattern deep-dive
-│   └── LEARNING.md          # Development journal
-└── .github/
-    ├── workflows/ci.yml     # Automated testing pipeline
-    └── ISSUE_TEMPLATE/      # Structured issue creation
-```
-
----
-
-## Development Workflow
-
-This project follows a structured agile workflow:
-
-1. **Issues** define scope — each feature is one issue with acceptance criteria
-2. **Feature branches** isolate work — `feature/provider-interface`, `feature/yaml-loader`
-3. **TDD** drives implementation — red, green, refactor
-4. **PRs** document decisions — each PR includes a learning reflection
-5. **CI** validates quality — every push runs tests, linting, and type checking
-
-### Running Tests
-
-```bash
-pytest                  # Run all tests
-pytest -v               # Verbose output
-ruff check src/ tests/  # Lint check
-mypy src/               # Type check
-```
-
----
-
-## Development Phases
-
-| Phase | Focus | Status |
+| Suite | Fil | Hvad den tester |
 |---|---|---|
-| **0** | Project setup, structure, CI | `done` |
-| **1** | Core architecture: providers, config, evaluator | `done` |
-| **2** | CLI interface and terminal reporter | `done` |
-| **3** | Anthropic API integration | `done` |
-| **4** | Documentation, examples, polish | `done` |
+| **Grundlæggende** | `examples/basic_test.yaml` | Fakta, tone og sikkerhed — 3 tests |
+| **Tone** | `examples/tone_check.yaml` | Professionel vs. uformel kommunikation |
+| **Sikkerhed** | `examples/safety.yaml` | Afvisning af skadelige forespørgsler |
+| **Faktuel** | `examples/factual.yaml` | Korrekte svar på kendte spørgsmål |
 
-See [Issues](../../issues) for the full breakdown.
-
----
-
-## Tech Stack
-
-| Tool | Purpose |
-|---|---|
-| **Python 3.11+** | Core language |
-| **Anthropic SDK** | Claude API integration |
-| **PyYAML** | Test case configuration |
-| **pytest** | Test framework |
-| **ruff** | Fast linting |
-| **mypy** | Static type checking |
-| **GitHub Actions** | CI/CD pipeline |
+```bash
+promptqa run examples/tone_check.yaml --verbose
+```
 
 ---
 
-## Background
+## Projektstruktur
 
-This project grows out of 8 years of systematic software testing at Brunata A/S
-combined with daily use of Claude Code and MCP server architecture for AI workflows.
-The core idea: LLM outputs should be tested with the same rigor as any other software —
-defined criteria, reproducible results, clear pass/fail.
+```
+src/promptqa/
+├── __init__.py              # Pakke-version
+├── __main__.py              # Indgang for python -m promptqa
+├── cli.py                   # Argument-parsing og kommando-routing
+├── config.py                # YAML → typed TestSuite/TestCase/Criterion dataclasses
+├── providers/
+│   ├── base.py              # BaseProvider ABC — Strategy-interfacet
+│   ├── mock.py              # MockProvider — dict-baseret opslagning af foruddefinerede svar
+│   └── anthropic.py         # AnthropicProvider — Claude API med TextBlock-håndtering
+├── evaluator.py             # Kører testcases: provider.complete() → kriterietjek → TestResult
+└── reporter.py              # Terminal-output med ANSI-farver og NO_COLOR-support
+
+tests/                       # 65 tests — pytest
+examples/                    # 4 YAML-suites med mock-svar
+docs/
+├── ARCHITECTURE.md          # Strategy Pattern dokumentation
+└── LEARNING.md              # Udviklingsjournal
+```
+
+Ny provider? Implementér `BaseProvider` i `providers/`, tilføj til factory i `cli.py`.
+Nyt kriterie? Skriv checker-funktionen, tilføj til dispatch-dict i `evaluator.py`.
 
 ---
 
-## License
+## Udviklingsproces
 
-[MIT](LICENSE)
+1. **Issues** definerer scope med acceptkriterier
+2. **Feature branches** isolerer arbejde (`feature/mock-provider`, `feature/evaluator`)
+3. **TDD** driver implementation — test commites først, derefter kode
+4. **Conventional commits** (`feat:`, `test:`, `docs:`)
+5. **CI** validerer ved hvert push: pytest, ruff, mypy
+
+```bash
+pytest -v               # Kør alle tests
+ruff check src/ tests/  # Lint
+mypy src/               # Typetjek
+```
+
+---
+
+## Baggrund
+
+Projektet kombinerer 8 års systematisk softwaretest hos Brunata A/S med daglig brug af Claude Code og MCP-server arkitektur. Kerneidéen: LLM-output bør testes med samme grundighed som al anden software — definerede kriterier, reproducerbare resultater, klart pass/fail.
+
+---
+
+MIT-licens — se [LICENSE](LICENSE)
