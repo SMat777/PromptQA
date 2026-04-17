@@ -191,25 +191,9 @@ src/promptqa/
 tests/                       # 65 tests — pytest
 examples/                    # 4 YAML-suites med mock-svar
 docs/
-├── ARCHITECTURE.md          # Strategy Pattern dokumentation
-└── LEARNING.md              # Udviklingsjournal
+└── ARCHITECTURE.md          # Strategy Pattern dokumentation
 ```
 
 Ny provider? Implementér `BaseProvider` i `providers/`, tilføj til factory i `cli.py`.
 Nyt kriterie? Skriv checker-funktionen, tilføj til dispatch-dict i `evaluator.py`.
 
----
-
-## Udviklingsproces
-
-1. **Issues** definerer scope med acceptkriterier
-2. **Feature branches** isolerer arbejde (`feature/mock-provider`, `feature/evaluator`)
-3. **TDD** driver implementation — test commites først, derefter kode
-4. **Conventional commits** (`feat:`, `test:`, `docs:`)
-5. **CI** validerer ved hvert push: pytest, ruff, mypy
-
-```bash
-pytest -v               # Kør alle tests
-ruff check src/ tests/  # Lint
-mypy src/               # Typetjek
-```
