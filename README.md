@@ -151,13 +151,13 @@ PromptQA/
 │   ├── __init__.py          # Package version
 │   ├── __main__.py          # python -m promptqa entry point
 │   ├── cli.py               # Argument parsing and command routing
-│   ├── config.py            # YAML test case loader (issue #3)
+│   ├── config.py            # YAML test case loader
 │   ├── providers/
 │   │   ├── base.py          # BaseProvider ABC — the Strategy interface
-│   │   ├── mock.py          # MockProvider — YAML responses (issue #2)
-│   │   └── anthropic.py     # AnthropicProvider — Claude API (issue #7)
-│   ├── evaluator.py         # Core test runner (issue #4)
-│   └── reporter.py          # Terminal output formatting (issue #6)
+│   │   ├── mock.py          # MockProvider — deterministic YAML responses
+│   │   └── anthropic.py     # AnthropicProvider — Claude API
+│   ├── evaluator.py         # Core test runner with criteria checkers
+│   └── reporter.py          # Terminal output with ANSI colors
 ├── tests/                   # pytest test suite
 ├── examples/                # YAML test configurations
 ├── docs/
@@ -195,11 +195,11 @@ mypy src/               # Type check
 
 | Phase | Focus | Status |
 |---|---|---|
-| **0** | Project setup, structure, CI | `in progress` |
-| **1** | Core architecture: providers, config, evaluator | `planned` |
-| **2** | CLI interface and terminal reporter | `planned` |
-| **3** | Anthropic API integration | `planned` |
-| **4** | Documentation, examples, polish | `planned` |
+| **0** | Project setup, structure, CI | `done` |
+| **1** | Core architecture: providers, config, evaluator | `done` |
+| **2** | CLI interface and terminal reporter | `done` |
+| **3** | Anthropic API integration | `done` |
+| **4** | Documentation, examples, polish | `in progress` |
 
 See [Issues](../../issues) for the full breakdown.
 

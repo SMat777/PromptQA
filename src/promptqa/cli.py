@@ -61,8 +61,13 @@ def _create_provider(provider_name: str, mock_responses: dict[str, str]) -> Base
         return MockProvider(responses=mock_responses)
 
     if provider_name == "anthropic":
-        print("Error: AnthropicProvider not yet implemented (see issue #7)", file=sys.stderr)
-        sys.exit(1)
+        from promptqa.providers.anthropic import AnthropicProvider
+
+        try:
+            return AnthropicProvider()
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
 
     print(f"Error: Unknown provider '{provider_name}'", file=sys.stderr)
     sys.exit(1)
