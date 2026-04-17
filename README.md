@@ -36,51 +36,50 @@ Bygget for at bringe QA-metodik ind i AI — fordi LLM-output fortjener samme gr
 ## Arkitektur
 
 ```
-                         promptqa run tests.yaml --provider anthropic
+                   promptqa run tests.yaml --provider anthropic
                                         |
                                         v
-                    +-------------------------------------------+
-                    |               CLI (cli.py)                |
-                    |   Parser argumenter, vælger provider      |
-                    +-------------------+-----------------------+
+                  +-------------------------------------------+
+                  | CLI (cli.py)                              |
+                  | Parser argumenter, vaelger provider       |
+                  +---------------------+---------------------+
                                         |
                                         v
-                    +-------------------------------------------+
-                    |          Config Loader (config.py)         |
-                    |   Læser YAML, validerer testdefinitioner   |
-                    +-------------------+-----------------------+
+                  +-------------------------------------------+
+                  | Config Loader (config.py)                 |
+                  | Laeser YAML, validerer testdefinitioner   |
+                  +---------------------+---------------------+
                                         |
                                         v
-                    +-------------------------------------------+
-                    |          Evaluator (evaluator.py)          |
-                    |   For hver testcase:                       |
-                    |   1. Send prompt til provider              |
-                    |   2. Tjek svar mod kriterier               |
-                    |   3. Saml resultater                       |
-                    +-------------------+-----------------------+
+                  +-------------------------------------------+
+                  | Evaluator (evaluator.py)                  |
+                  | For hver testcase:                        |
+                  | 1. Send prompt til provider               |
+                  | 2. Tjek svar mod kriterier                |
+                  | 3. Saml resultater                        |
+                  +---------------------+---------------------+
                                         |
-                      provider.complete(prompt, system)
+                    provider.complete(prompt, system)
                                         |
-              +-------------------------+-------------------------+
-              |                         |                         |
-              v                         v                         v
-    +------------------+   +---------------------+   +-------------------+
-    |   MockProvider   |   | AnthropicProvider    |   |  (OllamaProvider) |
-    |                  |   |                      |   |                   |
-    |  Returnerer for- |   |  Kalder Claude API   |   |  Kører lokal LLM  |
-    |  definerede svar |   |  med din API-nøgle   |   |  via Ollama       |
-    |  fra YAML        |   |                      |   |                   |
-    +------------------+   +---------------------+   +-------------------+
-         (gratis)            (kræver API-nøgle)        (gratis, lokal)
-              |                         |                         |
-              +-------------------------+-------------------------+
+                 +----------------------+--------------------------+
+                 |                      |                          |
+                 v                      v                          v
+       +-------------------+  +-----------------------+  +-------------------+
+       | MockProvider      |  | AnthropicProvider     |  | (OllamaProvider)  |
+       |                   |  |                       |  |                   |
+       | Returnerer for-   |  | Kalder Claude API     |  | Koerer lokal LLM  |
+       | definerede svar   |  | med din API-noegle    |  | via Ollama        |
+       | fra YAML          |  |                       |  |                   |
+       +-------------------+  +-----------------------+  +-------------------+
+          (gratis)              (kraever API-noegle)        (gratis, lokal)
+                 +----------------------+--------------------------+
                                         |
                                         v
-                    +-------------------------------------------+
-                    |          Reporter (reporter.py)            |
-                    |   Formaterer: pass/fail, opsummering,     |
-                    |   tokenforbrug, timing                     |
-                    +-------------------------------------------+
+                  +-------------------------------------------+
+                  | Reporter (reporter.py)                    |
+                  | Formaterer: pass/fail, opsummering,       |
+                  | tokenforbrug, timing                      |
+                  +-------------------------------------------+
 ```
 
 **Strategy Pattern:** Evaluator kender ikke den aktive provider — den kalder `provider.complete()`, og den konkrete provider håndterer resten. En ny provider kræver én ny klasse. Nul ændringer i evaluerings-logikken. Se [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detaljer.
