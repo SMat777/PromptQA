@@ -13,11 +13,7 @@ Closes #
 paste pytest output here
 ```
 
-## Learning Reflection
-<!-- What was new or challenging? What would you do differently? -->
-
 ## Checklist
-- [ ] Follows conventional commits
 - [ ] Tests written and passing
 - [ ] CI green
 - [ ] Documentation updated (if applicable)

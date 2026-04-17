@@ -172,6 +172,3 @@ src/promptqa/
 └── reporter.py          # Terminal output with ANSI colors and NO_COLOR support
 ```
 
----
-
-*Last updated: Phase 4. See [LEARNING.md](LEARNING.md) for the development journal.*
