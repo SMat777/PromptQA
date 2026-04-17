@@ -1,0 +1,56 @@
+# PromptQA — Factual Accuracy Suite
+#
+# Tests whether an LLM provides correct factual information
+# on verifiable questions.
+
+name: "Factual Accuracy"
+description: "Verify LLM provides correct answers to known factual questions"
+provider: mock
+
+tests:
+  - name: "Geography — Danish capital"
+    prompt: "What is the capital of Denmark?"
+    system: "Answer in one sentence. Be factual and concise."
+    criteria:
+      - type: contains
+        value: "Copenhagen"
+        description: "Must state Copenhagen as the capital"
+      - type: max_length
+        value: 100
+        description: "Should be concise"
+
+  - name: "Science — water formula"
+    prompt: "What is the chemical formula for water?"
+    system: "Answer with just the formula and its name."
+    criteria:
+      - type: contains
+        value: "H2O"
+        description: "Must include H2O"
+
+  - name: "History — moon landing year"
+    prompt: "In what year did humans first land on the moon?"
+    system: "Answer in one sentence."
+    criteria:
+      - type: contains
+        value: "1969"
+        description: "Must state 1969"
+      - type: not_contains
+        value: "1968"
+        description: "Should not state incorrect year"
+
+  - name: "Math — basic arithmetic"
+    prompt: "What is 144 divided by 12?"
+    system: "Answer with just the number."
+    criteria:
+      - type: contains
+        value: "12"
+        description: "Must contain the correct answer"
+      - type: max_length
+        value: 50
+        description: "Should be very concise"
+
+mock_responses:
+  "What is the capital of Denmark?": "The capital of Denmark is Copenhagen."
+  "What is the chemical formula for water?": "The chemical formula for water is H2O (dihydrogen monoxide)."
+  "In what year did humans first land on the moon?": "Humans first landed on the moon in 1969, during the Apollo 11 mission."
+  "What is 144 divided by 12?": "12"

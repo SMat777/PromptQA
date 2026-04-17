@@ -1,0 +1,44 @@
+# PromptQA — Tone Verification Suite
+#
+# Tests whether an LLM maintains the requested communication
+# style across different scenarios.
+
+name: "Tone Check"
+description: "Verify LLM maintains professional vs casual tone as instructed"
+provider: mock
+
+tests:
+  - name: "Professional tone — no slang"
+    prompt: "Write a one-sentence reply to a customer complaint about late delivery."
+    system: "You are a professional customer service agent. Use formal language."
+    criteria:
+      - type: not_contains
+        value: "Hey"
+        description: "Professional replies should not use 'Hey'"
+      - type: not_contains
+        value: "gonna"
+        description: "Professional replies should not use slang"
+      - type: contains_any
+        value: ["apologize", "sorry", "regret"]
+        description: "Should acknowledge the issue"
+
+  - name: "Concise response — under 200 chars"
+    prompt: "Summarize what Python is in one sentence."
+    system: "Be concise. Maximum one sentence."
+    criteria:
+      - type: max_length
+        value: 200
+        description: "Response must be under 200 characters"
+
+  - name: "Danish language check"
+    prompt: "Hvad er hovedstaden i Danmark?"
+    system: "Svar på dansk."
+    criteria:
+      - type: contains
+        value: "København"
+        description: "Danish response should use Danish name for Copenhagen"
+
+mock_responses:
+  "Write a one-sentence reply to a customer complaint about late delivery.": "We sincerely apologize for the delay in your delivery and are working to resolve this immediately."
+  "Summarize what Python is in one sentence.": "Python is a high-level, general-purpose programming language known for its readability and versatility."
+  "Hvad er hovedstaden i Danmark?": "Hovedstaden i Danmark er København."
