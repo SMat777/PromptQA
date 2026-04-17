@@ -15,6 +15,10 @@ VALID_CRITERION_TYPES = frozenset({
     "not_contains",
     "contains_any",
     "max_length",
+    "min_length",
+    "equals",
+    "regex",
+    "json_valid",
 })
 
 
@@ -31,6 +35,7 @@ class Criterion:
     type: str
     value: Any
     description: str = ""
+    case_insensitive: bool = False
 
 
 @dataclass
@@ -131,6 +136,7 @@ def _parse_criterion(raw: dict[str, Any]) -> Criterion:
         type=ctype,
         value=raw["value"],
         description=raw.get("description", ""),
+        case_insensitive=bool(raw.get("case_insensitive", False)),
     )
 
 
