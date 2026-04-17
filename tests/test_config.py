@@ -99,3 +99,48 @@ class TestLoadConfig:
 
         with pytest.raises(ValueError, match="tests"):
             load_config(config)
+
+    def test_missing_test_name_raises_error(self, tmp_path: Path) -> None:
+        config = tmp_path / "bad.yaml"
+        config.write_text(
+            "name: Suite\ntests:\n  - prompt: hello\n    criteria: []"
+        )
+
+        with pytest.raises(ValueError, match="name"):
+            load_config(config)
+
+    def test_missing_test_prompt_raises_error(self, tmp_path: Path) -> None:
+        config = tmp_path / "bad.yaml"
+        config.write_text(
+            "name: Suite\ntests:\n  - name: test1\n    criteria: []"
+        )
+
+        with pytest.raises(ValueError, match="prompt"):
+            load_config(config)
+
+    def test_unknown_criterion_type_raises_error(self, tmp_path: Path) -> None:
+        config = tmp_path / "bad.yaml"
+        config.write_text(
+            "name: Suite\ntests:\n"
+            "  - name: test1\n"
+            "    prompt: hello\n"
+            "    criteria:\n"
+            "      - type: typo_contains\n"
+            "        value: x\n"
+        )
+
+        with pytest.raises(ValueError, match="Unknown criterion type"):
+            load_config(config)
+
+    def test_missing_criterion_type_raises_error(self, tmp_path: Path) -> None:
+        config = tmp_path / "bad.yaml"
+        config.write_text(
+            "name: Suite\ntests:\n"
+            "  - name: test1\n"
+            "    prompt: hello\n"
+            "    criteria:\n"
+            "      - value: x\n"
+        )
+
+        with pytest.raises(ValueError, match="type"):
+            load_config(config)

@@ -97,6 +97,16 @@ class TestCriteriaCheckers:
 
         assert results[0].passed is False
 
+    def test_unknown_criterion_type_fails(self) -> None:
+        provider = _make_provider({"q": "answer"})
+        evaluator = Evaluator(provider)
+        tc = _make_test_case("q", [Criterion(type="nonexistent", value="x")])
+
+        results = evaluator.run([tc])
+
+        assert results[0].passed is False
+        assert "Unknown criterion type" in results[0].criterion_results[0].detail
+
 
 class TestEvaluatorResults:
     """Verify result structure and multi-criteria evaluation."""
