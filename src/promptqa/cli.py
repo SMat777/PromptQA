@@ -25,6 +25,7 @@ examples:
   promptqa run tests.yaml                       Run tests with mock provider
   promptqa run tests.yaml --provider anthropic   Run with Claude API
   promptqa run tests.yaml --verbose              Show detailed output
+  promptqa serve                                 Start dashboard on port 8000
         """,
     )
     parser.add_argument(
@@ -69,6 +70,19 @@ examples:
         "--model",
         default=None,
         help="Model to use (overrides ANTHROPIC_MODEL env var)",
+    )
+
+    serve_parser = subparsers.add_parser("serve", help="Start the web dashboard and API")
+    serve_parser.add_argument(
+        "--port", "-p",
+        type=int,
+        default=8000,
+        help="Port to listen on (default: 8000)",
+    )
+    serve_parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help="Host to bind to (default: 127.0.0.1)",
     )
 
     return parser
@@ -117,6 +131,8 @@ def main() -> None:
 
     if args.command == "run":
         _run(args)
+    elif args.command == "serve":
+        _serve(args)
 
 
 def _run(args: argparse.Namespace) -> None:
@@ -157,3 +173,19 @@ def _run(args: argparse.Namespace) -> None:
 
     if any(not r.passed for r in results):
         sys.exit(1)
+
+
+def _serve(args: argparse.Namespace) -> None:
+    """Start the FastAPI dashboard and API server."""
+    try:
+        import uvicorn
+    except ImportError:
+        print(
+            "Error: uvicorn not installed. "
+            "Install it with: pip install promptqa[web]",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    print(f"Starting PromptQA dashboard at http://{args.host}:{args.port}")
+    uvicorn.run("promptqa.api.app:app", host=args.host, port=args.port)

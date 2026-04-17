@@ -2,7 +2,19 @@
 
 **Systematic testing and quality assurance for LLM outputs.**
 
-Define test cases in YAML, run them against an LLM, and get structured pass/fail results.
+Define test cases in YAML, run them against an LLM, and get structured pass/fail results — via CLI, REST API, or web dashboard.
+
+## Quick Start
+
+```bash
+# Docker (recommended)
+docker compose up
+# Open http://localhost:8000
+
+# Or locally
+pip install -r requirements.txt && pip install -e ".[web]"
+promptqa serve
+```
 
 ---
 
@@ -11,8 +23,10 @@ Define test cases in YAML, run them against an LLM, and get structured pass/fail
 | Concept | Location | Purpose |
 |---|---|---|
 | **Strategy Pattern** | `providers/base.py` | Swap LLM backends without touching evaluation logic |
+| **REST API** | `api/app.py` | FastAPI endpoints for programmatic access |
+| **Web Dashboard** | `dashboard/templates/` | Visual run history with Tailwind CSS |
+| **Result Persistence** | `store.py` | SQLite-backed test run history |
 | **YAML configuration** | `examples/` | Declarative test definitions — no code changes needed |
-| **Typed dataclasses** | `config.py`, `evaluator.py` | Structured result objects instead of loose dicts |
 | **CI/CD** | `.github/workflows/ci.yml` | Automated quality control: pytest, ruff, mypy |
 
 ---
@@ -97,50 +111,30 @@ All text-based criteria support `case_insensitive: true`.
 ## Architecture
 
 ```
-                   promptqa run tests.yaml --provider anthropic
-                                        |
-                                        v
-                  +-------------------------------------------+
-                  | CLI (cli.py)                              |
-                  | Parses arguments, selects provider        |
-                  +---------------------+---------------------+
-                                        |
-                                        v
-                  +-------------------------------------------+
-                  | Config Loader (config.py)                 |
-                  | Reads YAML, validates test definitions    |
-                  +---------------------+---------------------+
-                                        |
-                                        v
-                  +-------------------------------------------+
-                  | Evaluator (evaluator.py)                  |
-                  | For each test case:                       |
-                  | 1. Send prompt to provider                |
-                  | 2. Check response against criteria        |
-                  | 3. Collect results                        |
-                  +---------------------+---------------------+
-                                        |
-                    provider.complete(prompt, system)
-                                        |
-                 +----------------------+--------------------------+
-                 |                      |                          |
-                 v                      v                          v
-       +-------------------+  +-----------------------+  +-------------------+
-       | MockProvider      |  | AnthropicProvider     |  | (OllamaProvider)  |
-       |                   |  |                       |  |                   |
-       | Returns pre-      |  | Calls Claude API     |  | Runs local LLM   |
-       | defined responses |  | with your API key    |  | via Ollama        |
-       | from YAML         |  |                       |  |                   |
-       +-------------------+  +-----------------------+  +-------------------+
-          (free)                (requires API key)         (free, local)
-                 +----------------------+--------------------------+
-                                        |
-                                        v
-                  +-------------------------------------------+
-                  | Reporter (reporter.py)                    |
-                  | Formats: pass/fail, summary,              |
-                  | token usage, timing                       |
-                  +-------------------------------------------+
+    Browser                          CLI
+       |                              |
+       v                              v
+  +----------+                 +-----------+
+  | Dashboard |                | promptqa  |
+  | (Tailwind)|                | run / serve|
+  +-----+-----+                +-----+-----+
+        |                            |
+        v                            v
+  +-------------------------------------------+
+  |           FastAPI REST API                 |
+  |  POST /api/runs   GET /api/runs           |
+  |  GET /api/runs/{id}  GET /api/health      |
+  +----------+----------------+---------------+
+             |                |
+      +------v------+  +-----v-------+
+      |  Evaluator  |  |  SQLite DB  |
+      |  8 criteria |  |  (store.py) |
+      +------+------+  +-------------+
+             |
+      +------v------+
+      |  Providers  |
+      | Mock | API  |
+      +-------------+
 ```
 
 **Strategy Pattern:** The evaluator doesn't know which provider is active — it calls `provider.complete()` and the concrete provider handles the rest. Adding a new provider requires one new class and zero changes to evaluation logic. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for details.
@@ -192,19 +186,26 @@ promptqa run examples/basic_test.yaml
 src/promptqa/
 ├── __init__.py              # Package version
 ├── __main__.py              # Entry point for python -m promptqa
-├── cli.py                   # Argument parsing and command routing
-├── config.py                # YAML -> typed TestSuite/TestCase/Criterion dataclasses
+├── cli.py                   # CLI: run, serve commands
+├── config.py                # YAML -> typed dataclasses
+├── evaluator.py             # Test runner: provider -> criteria -> results
+├── reporter.py              # Terminal and JSON output
+├── store.py                 # SQLite persistence layer
+├── seed.py                  # Demo data generator
 ├── providers/
 │   ├── base.py              # BaseProvider ABC — Strategy interface
-│   ├── mock.py              # MockProvider — dict-based responses from YAML
+│   ├── mock.py              # MockProvider — dict-based responses
 │   └── anthropic.py         # AnthropicProvider — Claude API
-├── evaluator.py             # Runs test cases: provider -> criteria checks -> TestResult
-└── reporter.py              # Terminal and JSON output formatting
+├── api/
+│   ├── app.py               # FastAPI application (API + dashboard routes)
+│   └── models.py            # Pydantic request/response models
+└── dashboard/
+    └── templates/           # Jinja2 + Tailwind CSS templates
 
-tests/                       # 89 tests — pytest
+tests/                       # 106 tests — pytest
 examples/                    # 4 YAML suites with mock responses
-docs/
-└── ARCHITECTURE.md          # Strategy Pattern documentation
+Dockerfile                   # Container deployment
+docker-compose.yml           # One-command startup
 ```
 
 New provider? Implement `BaseProvider` in `providers/`, add to factory in `cli.py`.
