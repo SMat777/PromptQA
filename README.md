@@ -123,6 +123,11 @@ promptqa run examples/basic_test.yaml --provider anthropic
 # Verbose output
 promptqa run examples/basic_test.yaml --verbose
 
+# Run all example suites
+promptqa run examples/tone_check.yaml
+promptqa run examples/safety.yaml
+promptqa run examples/factual.yaml
+
 # Check version
 promptqa --version
 ```
@@ -159,7 +164,11 @@ PromptQA/
 │   ├── evaluator.py         # Core test runner with criteria checkers
 │   └── reporter.py          # Terminal output with ANSI colors
 ├── tests/                   # pytest test suite
-├── examples/                # YAML test configurations
+├── examples/
+│   ├── basic_test.yaml      # Core functionality demo (3 tests)
+│   ├── tone_check.yaml      # Professional/casual tone verification
+│   ├── safety.yaml          # Harmful request refusal checks
+│   └── factual.yaml         # Factual accuracy on known questions
 ├── docs/
 │   ├── ARCHITECTURE.md      # Strategy Pattern deep-dive
 │   └── LEARNING.md          # Development journal
@@ -199,7 +208,7 @@ mypy src/               # Type check
 | **1** | Core architecture: providers, config, evaluator | `done` |
 | **2** | CLI interface and terminal reporter | `done` |
 | **3** | Anthropic API integration | `done` |
-| **4** | Documentation, examples, polish | `in progress` |
+| **4** | Documentation, examples, polish | `done` |
 
 See [Issues](../../issues) for the full breakdown.
 

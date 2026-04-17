@@ -125,6 +125,34 @@ User runs: promptqa run tests.yaml --provider anthropic
 | YAML over JSON for config | More readable for humans, supports comments, natural for test definitions |
 | Subprocess tests for CLI | Tests the actual user experience, not internal functions — catches argument parsing bugs |
 | Mock as default provider | Safe default — no API key needed, no cost, deterministic results |
+| Deferred provider import | `AnthropicProvider` imported inside function — mock users never load the Anthropic SDK |
+| TextBlock type narrowing | Anthropic SDK returns union type — isinstance check satisfies mypy strict and handles edge cases |
+| Dict dispatch for criteria | `{"contains": _check_contains}` is cleaner than if/elif and adding a new criterion is a one-line change |
+| NO_COLOR env support | Respects the [no-color.org](https://no-color.org/) standard for accessibility and CI |
+| Exit codes for CI | Exit 0 on all pass, 1 on any failure — integrates directly into CI pipelines |
+
+---
+
+## Criterion System
+
+The evaluator checks each response against a list of criteria. Each criterion type is a pure function:
+
+```python
+def _check_contains(text: str, c: Criterion) -> CriterionResult:
+    passed = str(c.value) in text
+    return CriterionResult(
+        passed=passed,
+        criterion_type="contains",
+        description=c.description,
+        detail=f"Expected '{c.value}' in response" if not passed else "",
+    )
+```
+
+Available types: `contains`, `not_contains`, `contains_any`, `max_length`.
+
+Adding a new type requires two changes:
+1. Write the checker function
+2. Add it to the dispatch dict in `_check_criterion()`
 
 ---
 
@@ -134,16 +162,16 @@ User runs: promptqa run tests.yaml --provider anthropic
 src/promptqa/
 ├── __init__.py          # Version string
 ├── __main__.py          # python -m promptqa entry point
-├── cli.py               # Argument parsing, provider selection
-├── config.py            # YAML → List[TestCase] (issue #3)
+├── cli.py               # Argument parsing, provider factory, command routing
+├── config.py            # YAML → TestSuite with typed dataclasses
 ├── providers/
-│   ├── base.py          # BaseProvider ABC + ProviderResponse
-│   ├── mock.py          # MockProvider (issue #2)
-│   └── anthropic.py     # AnthropicProvider (issue #7)
-├── evaluator.py         # Core test runner (issue #4)
-└── reporter.py          # Terminal output (issue #6)
+│   ├── base.py          # BaseProvider ABC + ProviderResponse dataclass
+│   ├── mock.py          # MockProvider — dict-based response lookup
+│   └── anthropic.py     # AnthropicProvider — Claude API with TextBlock handling
+├── evaluator.py         # Core runner: provider.complete() → criteria checks → TestResult
+└── reporter.py          # Terminal output with ANSI colors and NO_COLOR support
 ```
 
 ---
 
-*This document is updated as the architecture evolves. See [LEARNING.md](LEARNING.md) for the development journal.*
+*Last updated: Phase 4. See [LEARNING.md](LEARNING.md) for the development journal.*
