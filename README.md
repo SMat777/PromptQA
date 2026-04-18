@@ -206,7 +206,12 @@ tests/                       # 106 tests — pytest
 examples/                    # 4 YAML suites with mock responses
 Dockerfile                   # Container deployment
 docker-compose.yml           # One-command startup
+docs/
+├── ARCHITECTURE.md          # Strategy Pattern documentation
+└── OPERATIONS.md            # Operations guide + upgrade roadmap
 ```
 
 New provider? Implement `BaseProvider` in `providers/`, add to factory in `cli.py`.
 New criterion? Write the checker function, add to dispatch dict in `evaluator.py`.
+
+See [docs/OPERATIONS.md](docs/OPERATIONS.md) for the full operations guide with screenshots workflow and upgrade roadmap.
